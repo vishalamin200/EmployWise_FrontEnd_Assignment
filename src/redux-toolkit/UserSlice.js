@@ -132,7 +132,6 @@ const UserSlice = createSlice({
             .addCase(editUserDetails.fulfilled,(state,action)=>{
                 const updatedUser= action?.payload?.data
                 state.users = state.users.map((user)=> (user?.id ===  updatedUser?.id)? updatedUser : user )
-                console.log(state.users)
             })
 
             .addCase(deleteUser.fulfilled,(state)=>{

@@ -11,7 +11,6 @@ import { addFetchPage, fetchUsers, setDeleteUserId, setEditUser, setNextPage, se
 function Users() {
   const { users, page, totalPages, fetchPage } = useSelector((state) => state?.User)
 
-
   const dispatch = useDispatch()
   const navigate = useNavigate('/')
 
@@ -33,7 +32,6 @@ function Users() {
     }
 
     if (!fetchPage[page]) {
-      console.log("fetchPage", fetchPage)
       fetchUsersData();
       dispatch(addFetchPage(page))
     }
