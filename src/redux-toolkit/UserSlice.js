@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import toast from 'react-hot-toast'
 
-import axiosInstance from '../Axios/AxiosInstance.js'
+import axiosInstance from '../axios/AxiosInstance.js'
 
 const initialState = {
     email: '',
