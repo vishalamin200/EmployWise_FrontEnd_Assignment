@@ -9,6 +9,11 @@ const initialState = {
     users: null,
     page: 1,
     totalPages: 0,
+    deleteUserId: null,
+    editUser:null,
+    isEditing:true,
+    userInfo:null,
+    fetchPage:{},
 }
 
 export const Login = createAsyncThunk('auth/login', async (data, thunkApi) => {
@@ -39,15 +44,70 @@ export const fetchUsers = createAsyncThunk('api/fetchUsers/', async (page, thunk
     }
 })
 
-const AuthSlice = createSlice({
-    name: 'Auth',
+export const editUserDetails = createAsyncThunk('api/editUser/', async (data, { rejectWithValue }) => {
+    try {
+        const response = axiosInstance.put(`/api/users/${data?.id}`)
+        toast.promise(response, {
+            loading: 'Updating User Details...',
+            success: "User Details Successfully",
+            error: (err) => err?.response?.data?.error
+        })
+        
+        const details = (await response).data
+        return {details,data}
+
+    } catch (err) {
+        return rejectWithValue(err?.response?.data?.error)
+    }
+})
+
+export const deleteUser = createAsyncThunk('api/deleteUser/', async (_, { getState, rejectWithValue }) => {
+    try {
+        const id = getState()?.User?.deleteUserId
+        const response = axiosInstance.delete(`/api/users/${id}`)
+        toast.promise(response, {
+            loading: 'Deleting User...',
+            success: "User Deleted Successfully",
+            error: (err) => err?.response?.data?.error
+        })
+        return (await response).data
+    } catch (err) {
+        return rejectWithValue(err?.response?.data?.error)
+    }
+})
+
+
+const UserSlice = createSlice({
+    name: 'User',
     initialState,
     reducers: {
         setPrevPage: (state) => {
             state.page = Math.max(state.page - 1, 1)
+            state.fetchPage[state.page] =false
         },
         setNextPage: (state) => {
             state.page = Math.min(state.page + 1, state.totalPages)
+            state.fetchPage[state.page] =false
+        },
+
+        setDeleteUserId: (state, action) => {
+            state.deleteUserId = action.payload
+        },
+
+        setEditUser: (state, action) => {
+            const userId = action.payload
+            const filteredArray = state?.users?.filter((user)=>user?.id === userId)
+            state.editUser = filteredArray[0]
+            state.userInfo = filteredArray[0]
+        },
+
+        toggleEdit:(state)=>{
+            state.isEditing = !state.isEditing
+        },
+
+        addFetchPage:(state,action)=>{
+            const page = action.payload
+            state.fetchPage[page]=true
         }
 
     },
@@ -68,9 +128,19 @@ const AuthSlice = createSlice({
                     state.users = info?.data
                 state.totalPages = info?.total_pages
             })
+            
+            .addCase(editUserDetails.fulfilled,(state,action)=>{
+                const updatedUser= action?.payload?.data
+                state.users = state.users.map((user)=> (user?.id ===  updatedUser?.id)? updatedUser : user )
+                console.log(state.users)
+            })
+
+            .addCase(deleteUser.fulfilled,(state)=>{
+                state.users = state.users.filter((user)=>user.id != state.deleteUserId)
+            })
 
     }
 })
 
-export const { setPrevPage, setNextPage } = AuthSlice.actions
-export default AuthSlice.reducer
+export const { setPrevPage, setNextPage, setDeleteUserId, setEditUser,toggleEdit,addFetchPage } = UserSlice.actions
+export default UserSlice.reducer

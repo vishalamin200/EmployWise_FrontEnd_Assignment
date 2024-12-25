@@ -5,21 +5,23 @@ import { useNavigate } from "react-router-dom";
 
 import deleteIcon from '../assets/Icons/delete-logo.png';
 import editIcon from '../assets/Icons/edit-icon.svg';
-import { fetchUsers, setNextPage, setPrevPage } from "../redux-toolkit/UserSlice";
+import DeleteUserModal from "../components/DeleteUserModal";
+import { addFetchPage, fetchUsers, setDeleteUserId, setEditUser, setNextPage, setPrevPage } from "../redux-toolkit/UserSlice";
 
 function Users() {
-  const { users, page, totalPages } = useSelector((state) => state?.Auth)
+  const { users, page, totalPages, fetchPage } = useSelector((state) => state?.User)
+
 
   const dispatch = useDispatch()
   const navigate = useNavigate('/')
 
   useEffect(() => {
+
     const fetchUsersData = async () => {
       try {
         const token = sessionStorage.getItem("authToken");
         if (!token) {
           toast.error("Unauthorized User");
-          
           navigate('/')
           return
         }
@@ -30,21 +32,27 @@ function Users() {
       }
     }
 
-    fetchUsersData();
+    if (!fetchPage[page]) {
+      console.log("fetchPage", fetchPage)
+      fetchUsersData();
+      dispatch(addFetchPage(page))
+    }
   }, [page]);
 
   const handleEdit = (id) => {
-    console.log("Edit user with ID:", id);
+    dispatch(setEditUser(id))
+    navigate('/edit-user')
   };
 
-  const handleDelete = (id) => {
-    console.log("Delete user with ID:", id);
+  const handleDelete = (userId) => {
+    dispatch(setDeleteUserId(userId))
+    document.getElementById('delete-user-modal').showModal()
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="mb-6 text-3xl font-bold">Users List</h1>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="min-h-screen bg-gray-200 p-8">
+      <h1 className="mb-4 mt-5 text-3xl font-bold">Users</h1>
+      <div className="mt-20 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {users?.map((user) => (
           <div
             key={user.id}
@@ -53,7 +61,7 @@ function Users() {
             <div className="flex items-center">
               <img
                 src={user.avatar}
-                alt={user.first_name}
+                alt='user-avatar'
                 className="h-24 w-24 rounded-full border-2 border-gray-300 "
               />
               <div className="ml-6">
@@ -80,9 +88,9 @@ function Users() {
           </div>
         ))}
       </div>
-      <div className="mt-6 flex justify-between">
+      <div className="mt-28 flex items-center justify-center gap-x-6">
         <button
-          className="rounded bg-blue-500 px-4 py-2 text-white disabled:opacity-50"
+          className="w-24 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
           onClick={() => dispatch(setPrevPage())}
           disabled={page === 1}
         >
@@ -90,13 +98,14 @@ function Users() {
         </button>
         <span>Page {page} of {totalPages}</span>
         <button
-          className="rounded bg-blue-500 px-4 py-2 text-white disabled:opacity-50"
+          className="w-24 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
           onClick={() => dispatch(setNextPage())}
           disabled={page === totalPages}
         >
           Next
         </button>
       </div>
+      <DeleteUserModal />
     </div>
   );
 }
